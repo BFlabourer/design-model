@@ -1,63 +1,54 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: lijiyun
- * Date: 2019/4/29
- * Time: 15:22
- */
 
-interface cache
+interface dataSave
 {
-    public function setValue($key, $val);
-    public function getValue($key);
+    public function connect();
 }
 
-class fileCache implements cache
+class mysql implements dataSave
 {
-    private $_filePath = '/tmp/';
-
-    public function setValue($key, $val){
-        $key = $this->_filePath.$key.'.php';
-        $value = 'file_cahce_test';
-        return file_put_contents($key, $value);
-    }
-
-    public function getValue($key){
-        $file = $this->_filePath.$key.'.php';
-        if (is_file($file)) {
-            return include $file;
-        }
-        return '';
+    public function connect()
+    {
+        mysqli_connect('127.0.0.1', 'root', 'root');
     }
 }
 
-class redisCache implements cache
+class redis implements dataSave
 {
-     private $_reCache = null;
-
-     public function __construct($ip, $port)
-     {
-        $this->_reCache = new Redis();
-        $this->_reCache->connect($ip, $port);
-     }
-
-     public function setValue($key, $val)
-     {
-         $val = serialize($val);
-         return $this->_reCache->set($key, $val);
-     }
-
-     public function getValue($key)
-     {
-         $val = $this->_reCache->get($key);
-         return unserialize($val);
-     }
+    public function connect()
+    {
+        $redis = new Redis();
+        $redis->connect('127.0.0.1', '6379');
+    }
 }
 
-$cache = new redisCache('127.0.0.1', '6379');
-$cache->setValue('test', 'test');
-return $cache->getValue('test');
+interface factory
+{
+    public function getInstance();
+}
 
-$cache = new fileCache();
-$cache->setValue('test1', 'testfile');
-return $cache->getValue('test1');
+class redisFactory implements factory
+{
+    public function getInstance()
+    {
+        return new redis();
+    }
+}
+
+class mysqlFactory implements factory
+{
+    public function getInstance()
+    {
+        return new mysql();
+    }
+}
+
+$mysqlFactory = new mysqlFactory();
+$mysql = $mysqlFactory->getInstance();
+$mysql->connect();
+
+$redisFactory = new redisFactory();
+$redis = $redisFactory->getInstance();
+$redis->connect();
+
+
