@@ -8,7 +8,8 @@
 /**
  * 单例模式的应用->数据库连接
  */
-class MysqlConnect{
+class MysqlConnect
+{
     private static $conn;
 
     private function __construct()
